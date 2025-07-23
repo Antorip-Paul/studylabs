@@ -833,7 +833,7 @@
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
     // Add your Gemini API key here
-    const GEMINI_API_KEY = 'AIzaSyCqyW1Zem7A11rIRIkcI2iDnipNyE7ggKo';
+    const GEMINI_API_KEY = localStorage.getItem('geminiApiKey') || '';
 
     // Load files from localStorage for persistence
     const savedFiles = JSON.parse(localStorage.getItem('pdfFiles') || '[]');

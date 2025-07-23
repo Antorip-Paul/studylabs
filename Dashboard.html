@@ -1,0 +1,2308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>StudyLabs v2 (Beta)</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body, html {
+      height: 100%;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      overflow: hidden;
+    }
+    .container {
+      display: flex;
+      height: 100vh;
+      width: 100vw;
+    }
+    .sidebar {
+      width: 15%;
+      background-color: #111827;
+      color: white;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .sidebar h2 {
+      font-size: 1.3rem;
+    }
+    .upload-button {
+      display: inline-block;
+      padding: 0.5rem 1rem;
+      background-color: #272370;
+      color: white;
+      text-align: center;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .file-list {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .file-button {
+      background-color: #1f2937;
+      color: white;
+      border: none;
+      padding: 0.5rem;
+      border-radius: 4px;
+      cursor: pointer;
+      text-align: left;
+    }
+    .file-button:hover {
+      background-color: #374151;
+    }
+    .file-button.active {
+      background-color: #4f46e5;
+    }
+    .viewer-container { /* New container for viewer and controls */
+      flex: 1;
+      display: flex;
+      flex-direction: column; /* Arrange content vertically */
+      background-color: #f9fafb;
+    }
+    .viewer-controls {
+      padding: 0.5rem 1rem;
+      background-color: #e2e8f0;
+      display: flex;
+      flex-wrap: wrap; /* Allow buttons to wrap */
+      gap: 0.5rem;
+      border-bottom: 1px solid #cbd5e1;
+    }
+    .viewer-controls button {
+      padding: 0.4rem 0.8rem;
+      border: 1px solid #94a3b8;
+      border-radius: 4px;
+      background-color: #f1f5f9;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+    .viewer-controls button.active {
+      background-color: #4f46e5;
+      color: white;
+      border-color: #4f46e5;
+    }
+    .viewer-controls button:hover:not(.active) {
+      background-color: #e2e8f0;
+    }
+
+    /* Highlighter specific styles */
+    .highlight-color-button {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%; /* Make them round */
+        border: 2px solid #ccc;
+        cursor: pointer;
+        display: inline-block;
+        vertical-align: middle;
+        margin: 0 2px;
+        padding: 0; /* Remove padding */
+    }
+    .highlight-color-button.selected-color {
+        border-color: #4f46e5; /* Highlight selected color */
+        box-shadow: 0 0 0 2px #4f46e5;
+    }
+    .highlight-green { background-color: #d4edda; }
+    .highlight-yellow { background-color: #fff3cd; }
+    .highlight-blue { background-color: #d1ecf1; }
+    .highlight-orange { background-color: #ffeeba; }
+
+
+    .viewer { /* Existing viewer for iframe, now also holds html-viewer */
+      flex: 1; /* Allow viewer to take remaining vertical space */
+      display: flex;
+    }
+    .viewer iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+    .html-content-view { /* Container for editable textarea and rendered div */
+      width: 100%;
+      height: 100%; /* Ensure it takes full height of its parent */
+      overflow-y: auto; /* Enable scrolling for this container */
+      max-height: 580px; /* Limit height to prevent overflow */
+      padding: 1rem;
+      background-color: #ffffff;
+      border: none;
+      display: none; /* Hidden by default */
+      flex: 1; /* Make it a flex item that expands */
+      display: flex; /* Make it a flex container for its children */
+      flex-direction: column; /* Stack children vertically */
+      position: relative; /* For context menu positioning */
+    }
+    .html-editor { /* New style for editable textarea */
+      width: 100%;
+      height: 100%; /* Fill parent height */
+      padding: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      resize: none; /* Prevent manual resizing */
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      line-height: 1.5;
+      display: none; /* Hidden by default */
+      overflow-y: auto; /* Ensure editor itself scrolls */
+    }
+    .html-rendered { /* New style for rendered markdown div */
+      width: 100%;
+      height: 100%; /* Fill parent height */
+      overflow-y: auto; /* Ensure rendered content itself scrolls */
+      padding: 1rem;
+      background-color: #ffffff;
+      border: none;
+    }
+
+    /* Basic Markdown styling for the HTML viewer */
+    .html-rendered h1, .html-rendered h2, .html-rendered h3, .html-rendered h4, .html-rendered h5, .html-rendered h6 {
+        margin-top: 1em;
+        margin-bottom: 0.5em;
+        line-height: 1.2;
+    }
+    .html-rendered h1 { font-size: 2em; }
+    .html-rendered h2 { font-size: 1.5em; }
+    .html-rendered h3 { font-size: 1.2em; }
+    .html-rendered p {
+        margin-bottom: 1em;
+        line-height: 1.6;
+    }
+    .html-rendered ul, .html-rendered ol {
+        margin-left: 20px;
+        margin-bottom: 1em;
+    }
+    .html-rendered pre {
+        background-color: #e2e8f0;
+        padding: 1em;
+        border-radius: 4px;
+        overflow-x: auto;
+        margin-bottom: 1em;
+    }
+    .html-rendered code {
+        font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+        background-color: #e2e8f0;
+        padding: 0.2em 0.4em;
+        border-radius: 3px;
+    }
+
+    /* Context Menu Styles */
+    #contextMenu {
+        position: absolute;
+        background-color: #ffffff;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        padding: 5px;
+        z-index: 100;
+        display: none; /* Hidden by default */
+        flex-direction: column;
+        gap: 5px;
+    }
+    #contextMenu button {
+        background-color: #4f46e5;
+        color: white;
+        border: none;
+        padding: 8px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.9em;
+        text-align: left;
+    }
+    #contextMenu button:hover {
+        background-color: #3730a3;
+    }
+
+    /* Modal Styles */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.6);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    }
+    .modal-content {
+        background-color: white;
+        padding: 25px;
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        max-width: 90%;
+        max-height: 90%;
+        overflow-y: auto;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+    }
+    .modal-content h3 {
+        margin-bottom: 15px;
+        color: #333;
+    }
+    .modal-content label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: bold;
+        color: #555;
+    }
+    .modal-content input[type="text"],
+    .modal-content input[type="number"],
+    .modal-content select,
+    .modal-content textarea {
+        width: calc(100% - 20px);
+        padding: 10px;
+        margin-bottom: 15px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        font-size: 1em;
+    }
+    .modal-content textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+    .modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 20px;
+    }
+    .modal-actions button {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 1em;
+    }
+    .modal-actions .primary {
+        background-color: #4f46e5;
+        color: white;
+    }
+    .modal-actions .secondary {
+        background-color: #e0e0e0;
+        color: #333;
+    }
+    .quiz-question-container {
+      margin-bottom: 20px;
+      padding: 15px;
+      border: 1px solid #eee;
+      border-radius: 8px;
+      background-color: #f9f9f9;
+    }
+    .quiz-question-container p {
+      margin-bottom: 10px;
+      font-size: 1.1em;
+      font-weight: bold;
+    }
+    .quiz-options button {
+      display: block;
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 8px;
+      background-color: #e2e8f0;
+      border: 1px solid #cbd5e1;
+      border-radius: 5px;
+      cursor: pointer;
+      text-align: left;
+      font-size: 1em;
+    }
+    .quiz-options button:hover {
+      background-color: #d1d8e0;
+    }
+    .quiz-options button.selected {
+      background-color: #4f46e5;
+      color: white;
+      border-color: #4f46e5;
+    }
+    .quiz-answer-input {
+      width: calc(100% - 20px);
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 1em;
+      margin-top: 5px;
+    }
+    .quiz-feedback {
+      margin-top: 10px;
+      padding: 8px;
+      border-radius: 5px;
+      font-weight: bold;
+    }
+    .quiz-feedback.correct {
+      background-color: #d4edda;
+      color: #155724;
+    }
+    .quiz-feedback.incorrect {
+      background-color: #f8d7da;
+      color: #721c24;
+    }
+    .quiz-feedback.incorrect span {
+      display: block;
+      margin-top: 5px;
+      font-weight: normal;
+      font-size: 0.9em;
+    }
+
+
+    .chat-panel {
+      width: 35%;
+      background-color: #ffffff;
+      display: flex;
+      flex-direction: column;
+      border-left: 1px solid #e5e7eb;
+    }
+    .chat-header {
+      padding: 1rem;
+      border-bottom: 1px solid #e5e7eb;
+      background-color: #f9fafb;
+    }
+    .chat-list {
+      max-height: 50px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      scroll-behavior: smooth;
+    }
+
+    .chat-list::-webkit-scrollbar {
+      display: none;
+    }
+    .chat-log::-webkit-scrollbar {
+      display: none;
+    }
+    .chat-input textarea::-webkit-scrollbar {
+      display: none;
+    }
+    .chat-item {
+      background-color: #f3f4f6;
+      border: 1px solid #e5e7eb;
+      padding: 0.5rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .chat-item:hover {
+      background-color: #e5e7eb;
+    }
+    .chat-item.active {
+      background-color: #dbeafe;
+      border-color: #3b82f6;
+    }
+    .chat-item .chat-name {
+      flex: 1;
+      cursor: pointer;
+    }
+    .chat-item .chat-name input {
+      background: none;
+      border: none;
+      font-size: 0.9rem;
+      width: 100%;
+      padding: 0.25rem;
+      border-radius: 2px;
+    }
+    .chat-item .chat-name input:focus {
+      background-color: white;
+      border: 1px solid #3b82f6;
+      outline: none;
+    }
+    .chat-item .chat-actions {
+      display: flex;
+      gap: 0.25rem;
+    }
+    .chat-item .rename-btn,
+    .chat-item .delete-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 0.8rem;
+      padding: 0.25rem;
+      border-radius: 2px;
+    }
+    .chat-item .rename-btn {
+      color: #059669;
+    }
+    .chat-item .rename-btn:hover {
+      background-color: #ecfdf5;
+    }
+    .chat-item .delete-btn {
+      color: #dc2626;
+    }
+    .chat-item .delete-btn:hover {
+      background-color: #fee2e2;
+    }
+    .create-chat-btn {
+      background-color: #10b981;
+      color: white;
+      border: none;
+      padding: 0.75rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      margin-bottom: 1rem; /* Added margin for spacing */
+    }
+    .create-chat-btn:hover {
+      background-color: #059669;
+    }
+    .temp-chat-btn { /* New style for temporary chat button */
+      background-color: #6b7280; /* Grey color for temporary */
+      color: white;
+      border: none;
+      padding: 0.75rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      margin-bottom: 1rem;
+      margin-left: 0.5rem; /* Space from New Chat button */
+    }
+    .temp-chat-btn:hover {
+      background-color: #4b5563;
+    }
+    .quiz-gen-btn { /* New style for quiz generation button */
+      background-color: #0d9488; /* Teal color for quiz */
+      color: white;
+      border: none;
+      padding: 0.75rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      margin-bottom: 1rem;
+      margin-left: 0.5rem; /* Space from other buttons */
+    }
+    .quiz-gen-btn:hover {
+      background-color: #0f766e;
+    }
+    .notes-btn { /* New style for notes button */
+      background-color: #9333ea; /* Purple color for notes */
+      color: white;
+      border: none;
+      padding: 0.75rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      margin-bottom: 1rem;
+      margin-left: 0.5rem; /* Space from other buttons */
+    }
+    .notes-btn:hover {
+      background-color: #7e22ce;
+    }
+
+    .chat-item.temporary { /* Style for temporary chat items in the list */
+      background-color: #e0e7ff; /* Lighter blue/purple to indicate temporary */
+      border-color: #a5b4fc;
+    }
+    .chat-item.temporary .chat-name-text::after {
+      content: " (Temp)";
+      font-size: 0.75em;
+      color: #4f46e5;
+      margin-left: 5px;
+    }
+
+    #chatLog {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem;
+      max-height: 360px; /* Let flexbox manage height */
+    }
+
+    .chat-log div {
+      margin-bottom: 0.75rem;
+    }
+    .user-message {
+      background-color: #dbeafe;
+      padding: 0.5rem;
+      border-radius: 6px;
+      margin-bottom: 0.5rem;
+      white-space: pre-wrap; /* Preserve whitespace and line breaks */
+    }
+    .bot-message {
+      background-color: #f3f4f6;
+      padding: 0.5rem;
+      border-radius: 6px;
+      margin-bottom: 0.5rem;
+      white-space: pre-wrap; /* Preserve whitespace and line breaks for markdown */
+    }
+    .chat-input {
+      display: flex;
+      padding: 1rem;
+      border-top: 1px solid #e5e7eb;
+      gap: 0.5rem;
+      align-items: flex-end; /* Align items to the bottom */
+    }
+    .chat-input textarea {
+      flex: 1;
+      padding: 0.5rem;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      resize: none; /* Prevent manual resizing */
+      min-height: 40px; /* Initial height */
+      max-height: 65px; /* Max height before scrolling */
+      overflow-y: auto; /* Enable scrolling */
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Keep font consistent */
+      line-height: 1.5; /* Improve readability for multiline text */
+    }
+    .chat-input button {
+      padding: 0.5rem 1rem;
+      background-color: #4f46e5;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      height: 100%;
+    }
+    .chat-input button:disabled {
+      background-color: #9ca3af;
+      cursor: not-allowed;
+    }
+    .error-message {
+      color: #dc2626;
+      font-size: 0.9rem;
+      margin-top: 0.5rem;
+    }
+    .success-message {
+      color: #059669;
+      font-size: 0.9rem;
+      margin-top: 0.5rem;
+    }
+    .no-pdf-message {
+      text-align: center;
+      color: #6b7280;
+      padding: 2rem;
+    }
+
+    /* Notes Modal Specific Styles */
+    #notesModal .modal-content {
+        max-width: 600px;
+        min-height: 400px;
+    }
+    #notesList {
+        flex: 1;
+        overflow-y: auto;
+        border: 1px solid #eee;
+        border-radius: 5px;
+        padding: 10px;
+        margin-bottom: 15px;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        max-height: 50px;
+    }
+    .note-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 10px;
+        background-color: #f3f4f6;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    .note-item:hover {
+        background-color: #e5e7eb;
+    }
+    .note-item.active {
+        background-color: #dbeafe;
+        border-color: #3b82f6;
+    }
+    .note-item span {
+        flex: 1;
+        font-weight: bold;
+    }
+    .note-item button {
+        background: none;
+        border: none;
+        color: #dc2626;
+        cursor: pointer;
+        font-size: 0.9em;
+        margin-left: 10px;
+    }
+    .note-item button:hover {
+        color: #b91c1c;
+    }
+    #noteTitleInput {
+        font-size: 1.2em;
+        font-weight: bold;
+    }
+    #noteContentTextarea {
+        flex: 1;
+        min-height: 150px;
+    }
+    .notes-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 15px;
+    }
+    .notes-actions .left-buttons button {
+        margin-right: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="sidebar">
+      <h2>📖 StudyLabs</h2>
+      <label class="upload-button" for="upload">Upload PDF</label>
+      <input type="file" id="upload" accept="application/pdf" style="display: none" />
+      <div class="file-list" id="fileList"></div>
+    </div>
+
+    <div class="viewer-container">
+      <div class="viewer-controls">
+        <button id="pdfViewBtn" onclick="setView('pdf')">PDF View</button>
+        <button id="htmlViewBtn" class="active" onclick="setView('html')">Text View</button>
+        <button id="highlighterBtn" style="display:none;" onclick="toggleHighlightMode()">Highlighter</button>
+        <div id="highlightColorPalette" style="display:none;">
+            <button class="highlight-color-button highlight-green" data-color="green" onclick="setHighlightColor('green')"></button>
+            <button class="highlight-color-button highlight-yellow" data-color="yellow" onclick="setHighlightColor('yellow')"></button>
+            <button class="highlight-color-button highlight-blue" data-color="blue" onclick="setHighlightColor('blue')"></button>
+            <button class="highlight-color-button highlight-orange" data-color="orange" onclick="setHighlightColor('orange')"></button>
+        </div>
+        <button id="editHtmlBtn" style="display:none;" onclick="editHtmlContent()">Edit Text</button>
+        <button id="saveHtmlBtn" style="display:none;" onclick="saveHtmlContent()">Save Text</button>
+      </div>
+      <div class="viewer">
+        <iframe id="pdfViewer"></iframe>
+        <div id="htmlContentView" class="html-content-view">
+          <textarea id="htmlEditor" class="html-editor"></textarea>
+          <div id="htmlRendered" class="html-rendered"></div>
+          <div id="contextMenu">
+            <button onclick="summarizeSelectedText()">Summarise text</button>
+            <button onclick="askAIAboutSelectedText()">Ask AI</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="chat-panel">
+      <div class="chat-header">
+        <div id="chatManagement" style="display: none;">
+          <button class="create-chat-btn" onclick="createNewChat()">New</button>
+          <button class="temp-chat-btn" onclick="createNewTemporaryChat()">Temporary</button>
+          <button class="quiz-gen-btn" onclick="showQuizSettingsModal()">Quiz Maker</button>
+          <button class="notes-btn" onclick="showNotesModal()">Notes</button>
+          <div class="chat-list" id="chatList"></div>
+        </div>
+      </div>
+      
+      <div id="noPdfMessage" class="no-pdf-message">
+        Select a PDF to view chats
+      </div>
+      
+      <div id="chatContainer" style="display: none; flex: 1; display: flex; flex-direction: column;">
+        <div class="chat-log" id="chatLog"></div>
+        <div class="chat-input">
+          <textarea id="userInput" placeholder="Ask a question about the document..."></textarea>
+          <button onclick="sendRegularChatQuery()" id="sendButton">Send</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quiz Settings Modal -->
+  <div id="quizSettingsModal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+      <h3>Generate Quiz Settings</h3>
+      <label for="chapterNo">Chapter No:</label>
+      <input type="text" id="chapterNo" placeholder="e.g., Chapter 1, Section 2.3">
+
+      <label for="questionType">Question Type:</label>
+      <select id="questionType">
+        <option value="Multiple Choice Question">Multiple Choice Question</option>
+        <option value="Fill in the Blanks">Fill in the Blanks</option>
+        <option value="True/False">True/False</option>
+        <option value="Short Question/Answer">Short Question/Answer</option>
+      </select>
+
+      <label for="numQuestions">No. of Questions:</label>
+      <input type="number" id="numQuestions" min="1" max="10" value="3">
+
+      <label for="customInstructions">Custom instructions:</label>
+      <textarea id="customInstructions" placeholder="e.g., Focus on key definitions, make questions challenging."></textarea>
+
+      <div class="modal-actions">
+        <button class="primary" onclick="generateQuiz()">Generate Quiz</button>
+        <button class="secondary" onclick="hideQuizSettingsModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Interactive Quiz Modal -->
+  <div id="quizModal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+      <h3 id="quizTitle">Quiz</h3>
+      <div id="quizQuestionsContainer">
+        <!-- Quiz questions will be rendered here -->
+      </div>
+      <div class="modal-actions">
+        <button class="primary" onclick="submitQuiz()">Submit Quiz</button>
+        <button class="secondary" onclick="hideQuizModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notes Modal -->
+  <div id="notesModal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+      <h3>Notes for <span id="notesFileName"></span></h3>
+      <div id="notesList">
+        <!-- Notes will be loaded here -->
+      </div>
+      <label for="noteTitleInput">Note Title:</label>
+      <input type="text" id="noteTitleInput" placeholder="Enter note title">
+      <label for="noteContentTextarea">Note Content:</label>
+      <textarea id="noteContentTextarea" placeholder="Write your note here..."></textarea>
+      <div class="notes-actions">
+        <div class="left-buttons">
+            <button class="primary" onclick="createNewNote()">New Note</button>
+            <button class="secondary" onclick="deleteNote(currentNoteId)" id="deleteNoteBtn" style="display:none;">Delete Note</button>
+        </div>
+        <div class="right-buttons">
+            <button class="primary" onclick="saveNote()">Save Note</button>
+            <button class="secondary" onclick="hideNotesModal()">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script>
+    // Configure marked.js to interpret single newlines as <br> tags for AI responses
+    marked.setOptions({
+      breaks: true
+    });
+
+    const fileList = document.getElementById('fileList');
+    const pdfViewer = document.getElementById('pdfViewer');
+    const htmlContentView = document.getElementById('htmlContentView'); // Container for HTML view
+    const htmlEditor = document.getElementById('htmlEditor'); // New: Textarea for editing
+    const htmlRendered = document.getElementById('htmlRendered'); // New: Div for rendered Markdown
+    const pdfViewBtn = document.getElementById('pdfViewBtn');
+    const htmlViewBtn = document.getElementById('htmlViewBtn');
+    const editHtmlBtn = document.getElementById('editHtmlBtn'); // New: Edit button
+    const saveHtmlBtn = document.getElementById('saveHtmlBtn'); // New: Save button
+    const highlighterBtn = document.getElementById('highlighterBtn'); // New: Highlighter button
+    const highlightColorPalette = document.getElementById('highlightColorPalette'); // New: Color palette
+    const upload = document.getElementById('upload');
+    const contextMenu = document.getElementById('contextMenu'); // New: Context menu element
+    let selectedTextForAI = ''; // New: To store selected text for AI queries
+
+    // Quiz elements
+    const quizSettingsModal = document.getElementById('quizSettingsModal');
+    const chapterNoInput = document.getElementById('chapterNo');
+    const questionTypeSelect = document.getElementById('questionType');
+    const numQuestionsInput = document.getElementById('numQuestions');
+    const customInstructionsTextarea = document.getElementById('customInstructions');
+    const quizModal = document.getElementById('quizModal');
+    const quizQuestionsContainer = document.getElementById('quizQuestionsContainer');
+    let generatedQuizData = []; // To store the quiz questions and correct answers
+
+    // Notes elements
+    const notesModal = document.getElementById('notesModal');
+    const notesFileNameSpan = document.getElementById('notesFileName');
+    const notesListContainer = document.getElementById('notesList');
+    const noteTitleInput = document.getElementById('noteTitleInput');
+    const noteContentTextarea = document.getElementById('noteContentTextarea');
+    const deleteNoteBtn = document.getElementById('deleteNoteBtn');
+    let currentNoteId = null; // To track the ID of the note being edited
+
+    let currentFile = null;
+    let currentPdfText = ''; // This will hold the extracted text for AI context
+    let storedFiles = {};
+    let currentChatId = null;
+    let chatHistory = {}; // Store chat histories
+    let activeViewer = 'html'; // Changed default to 'html'
+
+    // Highlighter state
+    let isHighlightingMode = false;
+    let selectedHighlightColor = ''; // e.g., 'green', 'yellow'
+
+    // Configure PDF.js
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+    // Add your Gemini API key here
+    const GEMINI_API_KEY = 'AIzaSyCqyW1Zem7A11rIRIkcI2iDnipNyE7ggKo';
+
+    // Load files from localStorage for persistence
+    const savedFiles = JSON.parse(localStorage.getItem('pdfFiles') || '[]');
+    savedFiles.forEach(file => {
+      // Ensure 'userHtmlContent' is initialized for older files
+      if (!file.userHtmlContent) {
+          file.userHtmlContent = file.extractedText || ''; // Use extractedText as initial content
+      }
+      // Ensure 'notes' array is initialized for older files
+      if (!file.notes) {
+          file.notes = [];
+      }
+      // Ensure 'highlights' array is initialized for older files
+      if (!file.highlights) {
+          file.highlights = [];
+      }
+      // Add the file to storedFiles using its name as key
+      storedFiles[file.name] = file;
+      addFileButton(file.name); // Only pass name, selectFile will retrieve full object
+    });
+
+    // Load chat history from localStorage
+    chatHistory = JSON.parse(localStorage.getItem('chatHistory') || '{}');
+
+    // Event listener for text selection in htmlRendered
+    htmlRendered.addEventListener('mouseup', (event) => {
+        const selection = window.getSelection();
+        const selectedText = selection.toString().trim();
+
+        if (selectedText.length > 0) {
+            selectedTextForAI = selectedText;
+            showContextMenu(event);
+
+            // If in highlighting mode, apply highlight immediately
+            if (isHighlightingMode && selectedHighlightColor) {
+                applyHighlight();
+            }
+        } else {
+            hideContextMenu();
+        }
+    });
+
+    // Hide context menu if clicked anywhere else
+    document.addEventListener('mousedown', (event) => {
+        if (contextMenu.style.display === 'flex' && !contextMenu.contains(event.target) && !htmlRendered.contains(event.target)) {
+            hideContextMenu();
+        }
+    });
+
+    function showContextMenu(event) {
+        contextMenu.style.display = 'flex';
+        // Position the menu relative to the mouse click or selection
+        // Using clientX/Y for mouse position, adjusted for scrolling of htmlContentView
+        const rect = htmlContentView.getBoundingClientRect();
+        let x = event.clientX - rect.left + htmlContentView.scrollLeft;
+        let y = event.clientY - rect.top + htmlContentView.scrollTop;
+
+        // Ensure menu stays within bounds of htmlContentView
+        const menuWidth = contextMenu.offsetWidth;
+        const menuHeight = contextMenu.offsetHeight;
+
+        if (x + menuWidth > htmlContentView.clientWidth) {
+            x = htmlContentView.clientWidth - menuWidth;
+        }
+        if (y + menuHeight > htmlContentView.clientHeight) {
+            y = htmlContentView.clientHeight - menuHeight;
+        }
+
+        contextMenu.style.left = `${x}px`;
+        contextMenu.style.top = `${y}px`;
+    }
+
+    function hideContextMenu() {
+        contextMenu.style.display = 'none';
+        selectedTextForAI = ''; // Clear selected text
+    }
+
+    // Function to summarize selected text
+    function summarizeSelectedText() {
+        if (!currentChatId) {
+            showCustomAlert('Please select a chat to get the summary.');
+            hideContextMenu();
+            return;
+        }
+        if (selectedTextForAI) {
+            sendQueryToAI(`Please summarize this text.`, selectedTextForAI);
+        }
+        hideContextMenu();
+    }
+
+    // Function to ask AI about selected text (opens a modal for user input)
+    function askAIAboutSelectedText() {
+        if (!currentChatId) {
+            showCustomAlert('Please select a chat to ask the AI.');
+            hideContextMenu();
+            return;
+        }
+        if (selectedTextForAI) {
+            showQuestionModal(selectedTextForAI, (userQuestion) => {
+                sendQueryToAI(userQuestion, selectedTextForAI);
+            });
+        }
+        hideContextMenu();
+    }
+
+
+    upload.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = async function (event) {
+          const url = event.target.result;
+          const extractedText = await extractTextFromPDF(url); // Raw text for AI
+          
+          // For the user's editable HTML content, initialize with extracted text
+          const userHtmlContent = extractedText; 
+          
+          const fileData = { name: file.name, url, extractedText, userHtmlContent, notes: [], highlights: [] }; // Initialize notes and highlights array
+          
+          // Store file data in memory first
+          storedFiles[file.name] = fileData;
+          
+          // Update localStorage
+          localStorage.setItem('pdfFiles', JSON.stringify(Object.values(storedFiles)));
+          
+          addFileButton(file.name); // Only pass name
+          selectFile(file.name); // Only pass name
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    function addFileButton(name) { // Removed extra parameters
+      const button = document.createElement('button');
+      button.textContent = name;
+      button.className = 'file-button';
+      button.onclick = (event) => selectFile(name, event); // Only pass name and event
+      
+      // Add delete functionality
+      button.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        showCustomConfirm(`Delete "${name}" and all its chats?`, () => {
+            deleteFile(name);
+        });
+      });
+      
+      fileList.appendChild(button);
+    }
+
+    function selectFile(fileName, event) { // Simplified parameters
+      // Update UI for file buttons
+      document.querySelectorAll('.file-button').forEach(btn => btn.classList.remove('active'));
+      if (event && event.target) {
+        event.target.classList.add('active');
+      } else {
+        const button = Array.from(fileList.children).find(btn => btn.textContent === fileName);
+        if (button) button.classList.add('active');
+      }
+      
+      // Retrieve the full file object from storedFiles
+      currentFile = storedFiles[fileName];
+      
+      if (!currentFile) {
+          console.error("Error: currentFile is null after selection. File might not be in storedFiles.");
+          return; // Prevent further errors
+      }
+
+      // Ensure notes and highlights arrays exist for the current file
+      if (!currentFile.notes) {
+          currentFile.notes = [];
+      }
+      if (!currentFile.highlights) {
+          currentFile.highlights = [];
+      }
+
+      currentPdfText = currentFile.extractedText; // Set currentPdfText for AI
+
+      // Update viewer content based on activeViewer
+      if (activeViewer === 'pdf') {
+        pdfViewer.src = currentFile.url;
+        pdfViewer.style.display = 'block';
+        htmlContentView.style.display = 'none';
+        highlighterBtn.style.display = 'none'; // Hide highlighter button
+        highlightColorPalette.style.display = 'none'; // Hide palette
+        isHighlightingMode = false; // Turn off highlight mode
+      } else { // activeViewer === 'html'
+        htmlEditor.style.display = 'none'; // Ensure editor is hidden initially
+        htmlRendered.style.display = 'block'; // Show rendered view
+        renderHtmlContentWithHighlights(); // Render with highlights
+        
+        pdfViewer.style.display = 'none';
+        htmlContentView.style.display = 'flex'; 
+
+        editHtmlBtn.style.display = 'inline-block'; // Show edit button
+        saveHtmlBtn.style.display = 'none'; // Hide save button
+        highlighterBtn.style.display = 'inline-block'; // Show highlighter button
+      }
+      
+      // Show chat management
+      document.getElementById('noPdfMessage').style.display = 'none';
+      document.getElementById('chatManagement').style.display = 'block';
+      
+      // Load chats for this file
+      loadChatsForFile(fileName);
+      
+      // Handle cases where userHtmlContent might be missing (e.g., old saved files)
+      if (currentFile.userHtmlContent === undefined) {
+          currentFile.userHtmlContent = currentFile.extractedText || '';
+          localStorage.setItem('pdfFiles', JSON.stringify(Object.values(storedFiles)));
+      }
+    }
+
+    // Function to switch between PDF and HTML views
+    function setView(viewType) {
+        activeViewer = viewType;
+        pdfViewBtn.classList.remove('active');
+        htmlViewBtn.classList.remove('active');
+        editHtmlBtn.style.display = 'none'; // Hide edit/save buttons by default
+        saveHtmlBtn.style.display = 'none';
+        highlighterBtn.style.display = 'none'; // Hide highlighter button
+        highlightColorPalette.style.display = 'none'; // Hide palette
+        isHighlightingMode = false; // Turn off highlight mode
+        hideContextMenu(); // Hide context menu when switching views
+
+        if (!currentFile) {
+            pdfViewer.style.display = 'none';
+            htmlContentView.style.display = 'none';
+            return;
+        }
+
+        if (viewType === 'pdf') {
+            pdfViewer.src = currentFile.url;
+            pdfViewer.style.display = 'block';
+            htmlContentView.style.display = 'none';
+            pdfViewBtn.classList.add('active');
+        } else { // viewType === 'html'
+            htmlEditor.style.display = 'none'; // Default to rendered view
+            htmlRendered.style.display = 'block';
+            renderHtmlContentWithHighlights(); // Render with highlights
+            
+            pdfViewer.style.display = 'none';
+            htmlContentView.style.display = 'flex'; 
+            htmlViewBtn.classList.add('active');
+            editHtmlBtn.style.display = 'inline-block'; // Show edit button
+            highlighterBtn.style.display = 'inline-block'; // Show highlighter button
+        }
+    }
+
+    // New function to switch to editing mode for HTML content
+    function editHtmlContent() {
+        if (!currentFile) return;
+        htmlRendered.style.display = 'none';
+        htmlEditor.style.display = 'block';
+        htmlEditor.value = currentFile.userHtmlContent || ''; // Load current content into editor
+        htmlEditor.focus();
+        
+        editHtmlBtn.style.display = 'none';
+        saveHtmlBtn.style.display = 'inline-block';
+        highlighterBtn.style.display = 'none'; // Hide highlighter button in edit mode
+        highlightColorPalette.style.display = 'none'; // Hide palette
+        isHighlightingMode = false; // Turn off highlight mode
+        hideContextMenu(); // Hide context menu when editing
+    }
+
+    // New function to save edited HTML content
+    function saveHtmlContent() {
+        if (!currentFile) return;
+        currentFile.userHtmlContent = htmlEditor.value; // Save content from editor
+        
+        // Clear all highlights when text content is explicitly saved, as offsets might change
+        currentFile.highlights = []; 
+
+        // Update the specific file in storedFiles
+        storedFiles[currentFile.name] = currentFile; 
+
+        localStorage.setItem('pdfFiles', JSON.stringify(Object.values(storedFiles))); // Persist changes
+        showCustomAlert('Text and highlights saved successfully!');
+        
+        htmlEditor.style.display = 'none';
+        htmlRendered.style.display = 'block';
+        renderHtmlContentWithHighlights(); // Re-render with cleared highlights
+        
+        saveHtmlBtn.style.display = 'none';
+        editHtmlBtn.style.display = 'inline-block';
+        highlighterBtn.style.display = 'inline-block'; // Show highlighter button again
+        hideContextMenu(); // Hide context menu after saving
+    }
+
+
+    function loadChatsForFile(fileName) {
+      const chatList = document.getElementById('chatList');
+      chatList.innerHTML = '';
+      
+      if (!chatHistory[fileName]) {
+        chatHistory[fileName] = {};
+      }
+      
+      const fileChats = chatHistory[fileName];
+      
+      Object.keys(fileChats).sort((a, b) => { // Sort chats by creation time
+        const chatA = fileChats[a];
+        const chatB = fileChats[b];
+        return new Date(chatA.createdAt) - new Date(chatB.createdAt);
+      }).forEach(chatId => {
+        const chat = fileChats[chatId];
+        const chatItem = document.createElement('div');
+        chatItem.className = 'chat-item';
+        if (chat.isTemporary) { // Add class for temporary chats
+          chatItem.classList.add('temporary');
+        }
+        chatItem.innerHTML = `
+          <div class="chat-name" onclick="selectChat('${fileName}', '${chatId}')">
+            <span class="chat-name-text">${chat.name}</span>
+            <input class="chat-name-input" style="display: none;" value="${chat.name}" />
+          </div>
+          <div class="chat-actions">
+            <button class="rename-btn" onclick="startRenaming('${fileName}', '${chatId}', event)">✏️</button>
+            <button class="delete-btn" onclick="deleteChat('${fileName}', '${chatId}', event)">×</button>
+          </div>
+        `;
+        chatList.appendChild(chatItem);
+      });
+    }
+
+    function startRenaming(fileName, chatId, event) {
+      event.stopPropagation();
+      
+      const chatItem = event.target.closest('.chat-item');
+      const nameText = chatItem.querySelector('.chat-name-text');
+      const nameInput = chatItem.querySelector('.chat-name-input');
+      const renameBtn = chatItem.querySelector('.rename-btn');
+      
+      nameText.style.display = 'none';
+      nameInput.style.display = 'block';
+      nameInput.focus();
+      nameInput.select();
+      renameBtn.textContent = '✓';
+      renameBtn.style.color = '#059669';
+      
+      const finishRenaming = () => {
+        const newName = nameInput.value.trim();
+        if (newName && newName !== chatHistory[fileName][chatId].name) {
+          chatHistory[fileName][chatId].name = newName;
+          saveChatHistory();
+          nameText.textContent = newName;
+        }
+        
+        nameText.style.display = 'block';
+        nameInput.style.display = 'none';
+        renameBtn.textContent = '✏️';
+        renameBtn.style.color = '#059669';
+        nameInput.removeEventListener('blur', finishRenaming); // Remove listener to prevent multiple calls
+      };
+      
+      nameInput.addEventListener('blur', finishRenaming);
+    
+      nameInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          finishRenaming();
+        }
+        if (e.key === 'Escape') {
+          nameInput.value = chatHistory[fileName][chatId].name;
+          finishRenaming();
+        }
+      });
+      
+      renameBtn.onclick = (e) => {
+        e.stopPropagation();
+        finishRenaming();
+      };
+    }
+
+    function createNewChat() {
+      if (!currentFile) return;
+      
+      const chatId = 'chat_' + Date.now();
+      const chatName = `Chat ${Object.keys(chatHistory[currentFile.name] || {}).length + 1}`;
+      
+      if (!chatHistory[currentFile.name]) {
+        chatHistory[currentFile.name] = {};
+      }
+      
+      chatHistory[currentFile.name][chatId] = {
+        name: chatName,
+        messages: [],
+        createdAt: new Date().toISOString(),
+        isTemporary: false // Explicitly mark as not temporary
+      };
+      
+      saveChatHistory();
+      loadChatsForFile(currentFile.name);
+      selectChat(currentFile.name, chatId);
+    }
+
+    // New function for temporary chats
+    function createNewTemporaryChat() {
+      if (!currentFile) return;
+      
+      const chatId = 'temp_chat_' + Date.now();
+      const chatName = `Temp Chat ${Object.keys(chatHistory[currentFile.name] || {}).filter(id => chatHistory[currentFile.name][id].isTemporary).length + 1}`;
+      
+      if (!chatHistory[currentFile.name]) {
+        chatHistory[currentFile.name] = {};
+      }
+      
+      chatHistory[currentFile.name][chatId] = {
+        name: chatName,
+        messages: [],
+        createdAt: new Date().toISOString(),
+        isTemporary: true // Mark as temporary
+      };
+      
+      // No call to saveChatHistory() here, as temporary chats are not saved
+      loadChatsForFile(currentFile.name);
+      selectChat(currentFile.name, chatId);
+    }
+
+    function selectChat(fileName, chatId) {
+      currentChatId = chatId;
+      
+      // Update UI
+      document.querySelectorAll('.chat-item').forEach(item => item.classList.remove('active'));
+      
+      const chatItems = document.querySelectorAll('.chat-item');
+      chatItems.forEach(item => {
+        const chatNameDiv = item.querySelector('.chat-name');
+        if (chatNameDiv && chatNameDiv.getAttribute('onclick') && chatNameDiv.getAttribute('onclick').includes(`'${chatId}'`)) {
+          item.classList.add('active');
+        }
+      });
+      
+      // Show chat container
+      document.getElementById('chatContainer').style.display = 'flex';
+      
+      // Load chat messages
+      loadChatMessages(fileName, chatId);
+      hideContextMenu(); // Hide context menu when selecting a chat
+    }
+
+    function loadChatMessages(fileName, chatId) {
+      const chatLog = document.getElementById('chatLog');
+      chatLog.innerHTML = '';
+      
+      const chat = chatHistory[fileName][chatId];
+      if (chat && chat.messages) {
+        chat.messages.forEach(message => {
+          const messageDiv = document.createElement('div');
+          messageDiv.className = message.role === 'user' ? 'user-message' : 'bot-message';
+          
+          if (message.role === 'user') {
+            messageDiv.textContent = '🧑: ' + message.content;
+          } else {
+            messageDiv.innerHTML = '🤖: ' + marked.parse(message.content);
+          }
+          chatLog.appendChild(messageDiv);
+        });
+      }
+      
+      chatLog.scrollTop = chatLog.scrollHeight;
+    }
+
+    function deleteChat(fileName, chatId, event) {
+      event.stopPropagation();
+      
+      showCustomConfirm('Delete this chat?', () => {
+        delete chatHistory[fileName][chatId];
+        saveChatHistory(); // Save only permanent chats
+        loadChatsForFile(fileName);
+        
+        if (currentChatId === chatId) {
+          currentChatId = null;
+          document.getElementById('chatContainer').style.display = 'none';
+        }
+      });
+    }
+
+    function deleteFile(fileName) {
+      // Remove from localStorage
+      const files = JSON.parse(localStorage.getItem('pdfFiles') || '[]');
+      const updatedFiles = files.filter(file => file.name !== fileName);
+      localStorage.setItem('pdfFiles', JSON.stringify(updatedFiles));
+      
+      // Remove from memory
+      delete storedFiles[fileName];
+      
+      // Remove chat history (all chats, including temporary, for this file)
+      delete chatHistory[fileName];
+      saveChatHistory(); // Save only permanent chats for other files
+      
+      // Remove from UI
+      const buttons = fileList.querySelectorAll('.file-button');
+      buttons.forEach(button => {
+        if (button.textContent === fileName) {
+          button.remove();
+        }
+      });
+      
+      // Clear viewer if this was the current file
+      if (currentFile && currentFile.name === fileName) {
+        pdfViewer.src = '';
+        htmlEditor.value = ''; // Clear editor
+        htmlRendered.innerHTML = ''; // Clear rendered view
+        currentFile = null;
+        currentPdfText = '';
+        currentChatId = null;
+        document.getElementById('chatManagement').style.display = 'none';
+        document.getElementById('chatContainer').style.display = 'none';
+        document.getElementById('noPdfMessage').style.display = 'block';
+        setView('pdf'); // Reset view to PDF
+      }
+    }
+
+    function saveChatHistory() {
+      const chatsToSave = {};
+      for (const fileName in chatHistory) {
+        chatsToSave[fileName] = {};
+        for (const chatId in chatHistory[fileName]) {
+          // Only save chats that are NOT temporary
+          if (!chatHistory[fileName][chatId].isTemporary) {
+            chatsToSave[fileName][chatId] = chatHistory[fileName][chatId];
+          }
+        }
+      }
+      localStorage.setItem('chatHistory', JSON.stringify(chatsToSave));
+    }
+
+    async function extractTextFromPDF(pdfData) {
+      try {
+        const pdf = await pdfjsLib.getDocument(pdfData).promise;
+        let fullText = '';
+        
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          const textContent = await page.getTextContent();
+          const pageText = textContent.items.map(item => item.str).join(' ');
+          fullText += pageText + '\n'; // Keep newlines for AI context
+        }
+        
+        currentPdfText = fullText; // Set for AI
+        console.log('PDF text extracted successfully');
+        return fullText; // Return extracted text
+      } catch (error) {
+        console.error('Error extracting PDF text:', error);
+        currentPdfText = '';
+        return '';
+      }
+    }
+
+    // Function to handle all AI queries (summarize, ask AI, regular chat)
+    async function sendQueryToAI(userQuestion, specificContext = '') {
+      const sendButton = document.getElementById('sendButton');
+      
+      if (!GEMINI_API_KEY || GEMINI_API_KEY === 'YOUR_GEMINI_API_KEY_HERE') {
+        showCustomAlert('Please add your Gemini API key to the code');
+        return;
+      }
+      
+      if (!currentFile || !currentChatId) {
+        showCustomAlert('Please select a PDF and create/select a chat');
+        return;
+      }
+
+      const chatLog = document.getElementById('chatLog');
+      
+      // Add user message to UI immediately
+      const userDiv = document.createElement('div');
+      userDiv.className = 'user-message';
+      userDiv.textContent = '🧑: ' + userQuestion;
+      chatLog.appendChild(userDiv);
+      
+      // Prepare the bot's thinking message
+      const botDiv = document.createElement('div');
+      botDiv.className = 'bot-message';
+      botDiv.textContent = '🤖: Thinking...'; // Initial thinking message
+      chatLog.appendChild(botDiv);
+      
+      // Auto-scroll to bottom
+      chatLog.scrollTop = chatLog.scrollHeight;
+      
+      sendButton.disabled = true;
+      sendButton.textContent = 'Sending...';
+
+      try {
+        const currentChat = chatHistory[currentFile.name][currentChatId];
+        
+        // Construct the current user's prompt, potentially including specific context.
+        let currentPromptText;
+        if (specificContext) {
+            currentPromptText = `Regarding the following text:\n\`\`\`\n${specificContext}\n\`\`\`\n\nMy question is: ${userQuestion}`;
+        } else {
+            currentPromptText = userQuestion;
+        }
+
+        // Build the conversation history for the API.
+        // This should include all previous user/model turns.
+        const previousConversation = currentChat.messages.map(msg => ({
+            role: msg.role === 'user' ? 'user' : 'model',
+            parts: [{ text: msg.content }]
+        }));
+
+        // The first message in the `contents` array should establish the system instructions and document context.
+        // Subsequent messages are the actual conversation turns.
+        const apiContents = [
+            {
+                role: 'user', // This is the first "user" turn, setting up the context for the AI
+                parts: [{
+                    text: `You are an AI assistant for document analysis. Answer questions based on the provided document content. If the answer cannot be found in the document, please state that.
+                    
+                    Document content:
+                    ${currentFile.userHtmlContent || currentPdfText}` // Use userHtmlContent first, fallback to currentPdfText
+                }]
+            },
+            ...previousConversation, // Previous turns
+            {
+                role: 'user', // Current user's question, which will be the last turn in the API call
+                parts: [{ text: currentPromptText }]
+            }
+        ];
+
+
+        const payload = { contents: apiContents };
+        const apiKey = GEMINI_API_KEY; // Use the provided API key
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
+
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        
+        if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts.length > 0) {
+          const aiResponse = data.candidates[0].content.parts[0].text;
+          botDiv.innerHTML = '🤖: ' + marked.parse(aiResponse);
+          
+          // Add AI response to chat history
+          chatHistory[currentFile.name][currentChatId].messages.push({
+            role: 'assistant',
+            content: aiResponse,
+            timestamp: new Date().toISOString()
+          });
+          
+          // Only save if it's not a temporary chat
+          if (!chatHistory[currentFile.name][currentChatId].isTemporary) {
+            saveChatHistory(); 
+          }
+        } else {
+          botDiv.textContent = '🤖: Sorry, I couldn\'t generate a response. Please try again.';
+        }
+        
+      } catch (error) {
+        console.error('Error calling Gemini API:', error);
+        botDiv.textContent = '🤖: Sorry, there was an error processing your request. Please check your API key and try again.';
+        
+        if (error.message.includes('401')) {
+          showCustomAlert('Invalid API key. Please check your Gemini API key in the code.');
+        }
+      } finally {
+        sendButton.disabled = false;
+        sendButton.textContent = 'Send';
+        chatLog.scrollTop = chatLog.scrollHeight;
+      }
+    }
+
+    // Wrapper for the main chat input to call sendQueryToAI
+    function sendRegularChatQuery() {
+        const userInput = document.getElementById('userInput');
+        const question = userInput.value.trim();
+        if (question) {
+            sendQueryToAI(question, ''); // No specific context for regular chat
+        }
+    }
+
+    const userInput = document.getElementById('userInput');
+    userInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendRegularChatQuery(); // Call the wrapper
+      }
+    });
+
+    userInput.addEventListener('input', () => {
+      userInput.style.height = 'auto';
+      userInput.style.height = Math.min(userInput.scrollHeight, 120) + 'px';
+    });
+
+    function showCustomAlert(message) {
+        const modal = document.createElement('div');
+        modal.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center;
+            z-index: 1000;
+        `;
+        modal.innerHTML = `
+            <div style="background-color: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 400px; text-align: center;">
+                <p style="margin-bottom: 20px;">${message}</p>
+                <button id="OK" style="padding: 8px 15px; background-color: #4f46e5; color: white; border: none; border-radius: 4px; cursor: pointer;">OK</button>
+            </div>
+        `;
+        modal.querySelector('div').classList.add('custom-modal');
+        document.body.appendChild(modal);
+
+        document.getElementById('OK').onclick = () => {
+            modal.remove();
+        };
+    }
+
+    function showCustomConfirm(message, onConfirm) {
+        const modal = document.createElement('div');
+        modal.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center;
+            z-index: 1000;
+        `;
+        modal.innerHTML = `
+            <div style="background-color: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 400px; text-align: center;">
+                <p style="margin-bottom: 20px;">${message}</p>
+                <button id="confirmYes" style="padding: 8px 15px; background-color: #dc2626; color: white; border: none; border-radius: 4px; cursor: pointer; margin-right: 10px;">Yes</button>
+                <button id="confirmNo" style="padding: 8px 15px; background-color: #6b7280; color: white; border: none; border-radius: 4px; cursor: pointer;">No</button>
+            </div>
+        `;
+        modal.querySelector('div').classList.add('custom-modal');
+        document.body.appendChild(modal);
+
+        document.getElementById('confirmYes').onclick = () => {
+            onConfirm();
+            modal.remove();
+        };
+        document.getElementById('confirmNo').onclick = () => {
+            modal.remove();
+        };
+    }
+
+    // New modal for asking questions based on selected text
+    function showQuestionModal(selectedText, callback) {
+        const modal = document.createElement('div');
+        modal.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center;
+            z-index: 1000;
+        `;
+        modal.innerHTML = `
+            <div style="background-color: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 500px; text-align: center;">
+                <p style="margin-bottom: 15px; text-align: left;"><strong>Selected Text:</strong></p>
+                <div style="max-height: 100px; overflow-y: auto; background-color: #f3f4f6; padding: 10px; border-radius: 4px; margin-bottom: 15px; text-align: left; white-space: pre-wrap;">${selectedText}</div>
+                <textarea id="questionInput" placeholder="Type your question here..." style="width: 100%; height: 80px; padding: 8px; border: 1px solid #ccc; border-radius: 4px; resize: vertical; margin-bottom: 15px;"></textarea>
+                <button id="submitQuestion" style="padding: 8px 15px; background-color: #4f46e5; color: white; border: none; border-radius: 4px; cursor: pointer; margin-right: 10px;">Ask</button>
+                <button id="cancelQuestion" style="padding: 8px 15px; background-color: #6b7280; color: white; border: none; border-radius: 4px; cursor: pointer;">Cancel</button>
+            </div>
+        `;
+        modal.querySelector('div').classList.add('custom-modal');
+        document.body.appendChild(modal);
+
+        document.getElementById('submitQuestion').onclick = () => {
+            const question = document.getElementById('questionInput').value.trim();
+            if (question) {
+                callback(question);
+            }
+            modal.remove();
+        };
+        document.getElementById('cancelQuestion').onclick = () => {
+            modal.remove();
+        };
+    }
+
+    // Quiz Functions
+    function showQuizSettingsModal() {
+      if (!currentFile) {
+        showCustomAlert('Please select a PDF to generate a quiz.');
+        return;
+      }
+      if (!currentChatId) {
+        showCustomAlert('Please select a chat to display the quiz results.');
+        return;
+      }
+      quizSettingsModal.style.display = 'flex';
+    }
+
+    function hideQuizSettingsModal() {
+      quizSettingsModal.style.display = 'none';
+    }
+
+    function hideQuizModal() {
+      quizModal.style.display = 'none';
+      generatedQuizData = []; // Clear quiz data when closing
+      quizQuestionsContainer.innerHTML = ''; // Clear quiz display
+    }
+
+    async function generateQuiz() {
+      const chapter = chapterNoInput.value.trim();
+      const type = questionTypeSelect.value;
+      const num = parseInt(numQuestionsInput.value, 10);
+      const customInstr = customInstructionsTextarea.value.trim();
+
+      if (!num || num <= 0 || num > 10) {
+        showCustomAlert('Please enter a valid number of questions (1-10).');
+        return;
+      }
+
+      hideQuizSettingsModal(); // Hide settings modal
+
+      // Add a "Generating Quiz..." message to the chat
+      const chatLog = document.getElementById('chatLog');
+      const generatingMessageDiv = document.createElement('div');
+      generatingMessageDiv.className = 'bot-message';
+      generatingMessageDiv.textContent = '🤖: Generating quiz... Please wait.';
+      chatLog.appendChild(generatingMessageDiv);
+      chatLog.scrollTop = chatLog.scrollHeight;
+
+      const quizPrompt = `Generate a quiz based on the document content.
+      ${chapter ? `Focus on: ${chapter}.` : ''}
+      Question Type: ${type}.
+      Number of Questions: ${num}.
+      ${customInstr ? `Custom Instructions: ${customInstr}` : ''}
+
+      Provide the quiz in a JSON array format. Each object in the array should represent a question and have the following properties:
+      - "questionNumber": (number)
+      - "question": (string)
+      - "type": (string, must be one of: "Multiple Choice Question", "Fill in the Blanks", "True/False", "Short Question/Answer")
+      - "options": (array of strings, only for "Multiple Choice Question" type, exactly 4 options)
+      - "correctAnswer": (string, the correct answer)
+
+      Example for Multiple Choice Question:
+      {
+        "questionNumber": 1,
+        "question": "What is the capital of France?",
+        "type": "Multiple Choice Question",
+        "options": ["Berlin", "Paris", "Rome", "Madrid"],
+        "correctAnswer": "Paris"
+      }
+      Example for Fill in the Blanks:
+      {
+        "questionNumber": 2,
+        "question": "The Earth revolves around the ____.",
+        "type": "Fill in the Blanks",
+        "correctAnswer": "Sun"
+      }
+      Example for True/False:
+      {
+        "questionNumber": 3,
+        "question": "Water boils at 100 degrees Celsius.",
+        "type": "True/False",
+        "correctAnswer": "True"
+      }
+      Example for Short Question/Answer:
+      {
+        "questionNumber": 4,
+        "question": "Explain the concept of photosynthesis in brief.",
+        "type": "Short Question/Answer",
+        "correctAnswer": "Photosynthesis is the process by which green plants and some other organisms use sunlight to synthesize foods with the help of chlorophyll, carbon dioxide, and water."
+      }
+      `;
+
+      try {
+        const payload = {
+          contents: [{
+            role: "user",
+            parts: [{ text: `Document content: ${currentFile.userHtmlContent || currentPdfText}\n\n${quizPrompt}` }] // Use userHtmlContent
+          }],
+          generationConfig: {
+            responseMimeType: "application/json",
+            responseSchema: {
+                type: "ARRAY",
+                items: {
+                    type: "OBJECT",
+                    properties: {
+                        "questionNumber": { "type": "NUMBER" },
+                        "question": { "type": "STRING" },
+                        "type": { "type": "STRING", "enum": ["Multiple Choice Question", "Fill in the Blanks", "True/False", "Short Question/Answer"] },
+                        "options": { "type": "ARRAY", "items": { "type": "STRING" } },
+                        "correctAnswer": { "type": "STRING" }
+                    },
+                    "required": ["questionNumber", "question", "type", "correctAnswer"]
+                }
+            }
+          }
+        };
+
+        const apiKey = GEMINI_API_KEY;
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
+
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        
+        if (result.candidates && result.candidates.length > 0 && result.candidates[0].content && result.candidates[0].content.parts && result.candidates[0].content.parts.length > 0) {
+            const quizJsonString = result.candidates[0].content.parts[0].text;
+            try {
+                generatedQuizData = JSON.parse(quizJsonString);
+                renderQuiz(generatedQuizData);
+                generatingMessageDiv.textContent = '🤖: Quiz generated!';
+            } catch (parseError) {
+                console.error('Error parsing quiz JSON:', parseError);
+                generatingMessageDiv.textContent = '🤖: Failed to generate quiz. Invalid response format. Please try again.';
+                showCustomAlert('Failed to parse quiz data. AI returned invalid JSON. Please try again or adjust instructions.');
+            }
+        } else {
+            generatingMessageDiv.textContent = '🤖: Failed to generate quiz. No candidates found.';
+            showCustomAlert('Failed to generate quiz. AI did not return a valid response. Please try again.');
+        }
+
+      } catch (error) {
+        console.error('Error generating quiz:', error);
+        generatingMessageDiv.textContent = '🤖: Error generating quiz. Please check console for details.';
+        showCustomAlert('Error generating quiz. Please check your API key and network connection.');
+      } finally {
+        // Ensure the "Generating Quiz..." message is updated or removed
+        // This is handled by the try/catch blocks above.
+      }
+    }
+
+    function renderQuiz(quizData) {
+      quizQuestionsContainer.innerHTML = ''; // Clear previous questions
+      quizData.forEach((q, index) => {
+        const questionDiv = document.createElement('div');
+        questionDiv.className = 'quiz-question-container';
+        questionDiv.setAttribute('data-question-number', q.questionNumber);
+        questionDiv.setAttribute('data-question-type', q.type);
+        questionDiv.setAttribute('data-correct-answer', q.correctAnswer); // Store correct answer
+
+        let questionHtml = `<p>${q.questionNumber}. ${q.question}</p>`;
+        let inputElement = '';
+
+        if (q.type === 'Multiple Choice Question') {
+          inputElement = `<div class="quiz-options">`;
+          q.options.forEach((option, optIndex) => {
+            inputElement += `<button data-option="${option}" onclick="selectOption(this, ${index})">${option}</button>`;
+          });
+          inputElement += `</div>`;
+        } else if (q.type === 'Fill in the Blanks') {
+          inputElement = `<input type="text" class="quiz-answer-input" placeholder="Your answer" data-question-index="${index}">`;
+        } else if (q.type === 'True/False') {
+          inputElement = `
+            <div class="quiz-options">
+              <button data-option="True" onclick="selectOption(this, ${index})">True</button>
+              <button data-option="False" onclick="selectOption(this, ${index})">False</button>
+            </div>
+          `;
+        } else if (q.type === 'Short Question/Answer') {
+          inputElement = `<textarea class="quiz-answer-input" placeholder="Your answer" data-question-index="${index}"></textarea>`;
+        }
+        
+        questionDiv.innerHTML = questionHtml + inputElement + `<div class="quiz-feedback" id="feedback-${index}" style="display:none;"></div>`;
+        quizQuestionsContainer.appendChild(questionDiv);
+      });
+
+      quizModal.style.display = 'flex'; // Show the quiz modal
+    }
+
+    function selectOption(button, questionIndex) {
+      const optionsContainer = button.closest('.quiz-options');
+      Array.from(optionsContainer.children).forEach(btn => btn.classList.remove('selected'));
+      button.classList.add('selected');
+      // Store the selected answer temporarily
+      generatedQuizData[questionIndex].userAnswer = button.getAttribute('data-option');
+    }
+
+    async function submitQuiz() {
+      const userAnswers = [];
+      const questionsForGrading = [];
+
+      generatedQuizData.forEach((q, index) => {
+        let userAnswer = '';
+        const questionDiv = quizQuestionsContainer.querySelector(`[data-question-number="${q.questionNumber}"]`);
+        
+        if (q.type === 'Multiple Choice Question' || q.type === 'True/False') {
+          const selectedButton = questionDiv.querySelector('.quiz-options button.selected');
+          userAnswer = selectedButton ? selectedButton.getAttribute('data-option') : '';
+        } else if (q.type === 'Fill in the Blanks' || q.type === 'Short Question/Answer') {
+          const inputElement = questionDiv.querySelector('.quiz-answer-input');
+          userAnswer = inputElement ? inputElement.value.trim() : '';
+        }
+        userAnswers.push({ questionNumber: q.questionNumber, userAnswer: userAnswer });
+        questionsForGrading.push({
+            questionNumber: q.questionNumber,
+            question: q.question,
+            type: q.type,
+            correctAnswer: q.correctAnswer,
+            userAnswer: userAnswer // Include user's answer for AI to grade
+        });
+      });
+
+      // Send grading request to AI
+      const gradingPrompt = `Grade the following quiz questions and provide feedback. For each question, indicate if the user's answer is correct or incorrect. If incorrect, provide the correct answer. Also provide an overall score and feedback.
+
+      Quiz Data (Questions and User Answers):
+      ${JSON.stringify(questionsForGrading, null, 2)}
+
+      Provide the grading results in a JSON object with the following structure:
+      {
+        "results": [
+          {
+            "questionNumber": (number),
+            "userAnswer": (string),
+            "correct": (boolean),
+            "correctAnswer": (string, only if incorrect),
+            "feedback": (string)
+          }
+        ],
+        "overallScore": (string, e.g., "3/5"),
+        "overallFeedback": (string)
+      }`;
+
+      // Add "Grading Quiz..." message to chat
+      const chatLog = document.getElementById('chatLog');
+      const gradingMessageDiv = document.createElement('div');
+      gradingMessageDiv.className = 'bot-message';
+      gradingMessageDiv.textContent = '🤖: Grading quiz...';
+      chatLog.appendChild(gradingMessageDiv);
+      chatLog.scrollTop = chatLog.scrollHeight;
+
+      try {
+        const payload = {
+          contents: [{
+            role: "user",
+            parts: [{ text: `Document content: ${currentFile.userHtmlContent || currentPdfText}\n\n${gradingPrompt}` }] // Use userHtmlContent
+          }],
+          generationConfig: {
+            responseMimeType: "application/json",
+            responseSchema: {
+                type: "OBJECT",
+                properties: {
+                    "results": {
+                        "type": "ARRAY",
+                        "items": {
+                            "type": "OBJECT",
+                            "properties": {
+                                "questionNumber": { "type": "NUMBER" },
+                                "userAnswer": { "type": "STRING" },
+                                "correct": { "type": "BOOLEAN" },
+                                "correctAnswer": { "type": "STRING" },
+                                "feedback": { "type": "STRING" }
+                            },
+                            "required": ["questionNumber", "userAnswer", "correct", "feedback"]
+                        }
+                    },
+                    "overallScore": { "type": "STRING" },
+                    "overallFeedback": { "type": "STRING" }
+                },
+                "required": ["results", "overallScore", "overallFeedback"]
+            }
+          }
+        };
+
+        const apiKey = GEMINI_API_KEY;
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
+
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        
+        if (result.candidates && result.candidates.length > 0 && result.candidates[0].content && result.candidates[0].content.parts && result.candidates[0].content.parts.length > 0) {
+            const gradingJsonString = result.candidates[0].content.parts[0].text;
+            try {
+                const gradingResult = JSON.parse(gradingJsonString);
+                displayQuizResultsInChat(gradingResult);
+                gradingMessageDiv.textContent = '🤖: Quiz graded!';
+                // Optionally, display feedback directly on the quiz modal
+                displayFeedbackOnQuiz(gradingResult);
+
+            } catch (parseError) {
+                console.error('Error parsing grading JSON:', parseError);
+                gradingMessageDiv.textContent = '🤖: Failed to grade quiz. Invalid response format. Please try again.';
+                showCustomAlert('Failed to parse grading data. AI returned invalid JSON. Please try again.');
+            }
+        } else {
+            gradingMessageDiv.textContent = '🤖: Failed to grade quiz. No candidates found.';
+            showCustomAlert('Failed to grade quiz. AI did not return a valid response. Please try again.');
+        }
+
+      } catch (error) {
+        console.error('Error submitting quiz for grading:', error);
+        gradingMessageDiv.textContent = '🤖: Error grading quiz. Please check console for details.';
+        showCustomAlert('Error grading quiz. Please check your API key and network connection.');
+      }
+    }
+
+    function displayFeedbackOnQuiz(gradingResult) {
+        gradingResult.results.forEach(res => {
+            const feedbackDiv = document.getElementById(`feedback-${res.questionNumber - 1}`); // Adjust index
+            if (feedbackDiv) {
+                feedbackDiv.style.display = 'block';
+                feedbackDiv.classList.remove('correct', 'incorrect');
+                if (res.correct) {
+                    feedbackDiv.classList.add('correct');
+                    feedbackDiv.textContent = `Correct! ${res.feedback}`;
+                } else {
+                    feedbackDiv.classList.add('incorrect');
+                    feedbackDiv.innerHTML = `Incorrect. ${res.feedback}<span>Correct Answer: ${res.correctAnswer}</span>`;
+                }
+            }
+        });
+    }
+
+
+    function displayQuizResultsInChat(gradingResult) {
+      const chatLog = document.getElementById('chatLog');
+      const resultDiv = document.createElement('div');
+      resultDiv.className = 'bot-message';
+      let resultHtml = `<h4>🤖: Quiz Results (${gradingResult.overallScore})</h4>`;
+      resultHtml += `<p>${gradingResult.overallFeedback}</p><br>`;
+
+      gradingResult.results.forEach(res => {
+        const originalQuestion = generatedQuizData.find(q => q.questionNumber === res.questionNumber);
+        if (originalQuestion) {
+          resultHtml += `<p><strong>Q${res.questionNumber}: ${originalQuestion.question}</strong></p>`;
+          resultHtml += `<p>Your Answer: ${res.userAnswer || 'No answer'}</p>`;
+          if (res.correct) {
+            resultHtml += `<p style="color: green;">Correct! ${res.feedback}</p>`;
+          } else {
+            resultHtml += `<p style="color: red;">Incorrect. ${res.feedback}</p>`;
+            resultHtml += `<p>Correct Answer: ${res.correctAnswer}</p>`;
+          }
+          resultHtml += `<br>`;
+        }
+      });
+      resultDiv.innerHTML = resultHtml;
+      chatLog.appendChild(resultDiv);
+      chatLog.scrollTop = chatLog.scrollHeight;
+
+      // Add quiz results to chat history
+      chatHistory[currentFile.name][currentChatId].messages.push({
+        role: 'assistant',
+        content: `Quiz Results (${gradingResult.overallScore})\n${gradingResult.overallFeedback}\n\n` +
+                 gradingResult.results.map(res => {
+                     const originalQuestion = generatedQuizData.find(q => q.questionNumber === res.questionNumber);
+                     return `Q${res.questionNumber}: ${originalQuestion.question}\nYour Answer: ${res.userAnswer || 'No answer'}\n${res.correct ? 'Correct!' : 'Incorrect.'} ${res.feedback}${res.correct ? '' : `\nCorrect Answer: ${res.correctAnswer}`}`;
+                 }).join('\n\n'),
+        timestamp: new Date().toISOString()
+      });
+      if (!chatHistory[currentFile.name][currentChatId].isTemporary) {
+        saveChatHistory();
+      }
+    }
+
+    // Notes Functions
+    function showNotesModal() {
+        if (!currentFile) {
+            showCustomAlert('Please select a PDF to view/create notes.');
+            return;
+        }
+        notesFileNameSpan.textContent = currentFile.name;
+        loadNotesForFile();
+        notesModal.style.display = 'flex';
+    }
+
+    function hideNotesModal() {
+        notesModal.style.display = 'none';
+    }
+
+    function loadNotesForFile() {
+        notesListContainer.innerHTML = ''; // Clear existing list
+        if (!currentFile || !currentFile.notes) {
+            currentFile.notes = []; // Ensure notes array exists
+        }
+
+        if (currentFile.notes.length === 0) {
+            notesListContainer.innerHTML = '<p style="text-align: center; color: #666;">No notes yet. Click "New Note" to add one.</p>';
+        } else {
+            currentFile.notes.forEach(note => {
+                const noteItem = document.createElement('div');
+                noteItem.className = 'note-item';
+                noteItem.setAttribute('data-note-id', note.id);
+                noteItem.innerHTML = `
+                    <span onclick="selectNote('${note.id}')">${note.title || 'Untitled Note'}</span>
+                    <button onclick="deleteNote('${note.id}', event)">×</button>
+                `;
+                notesListContainer.appendChild(noteItem);
+            });
+        }
+        createNewNote(); // Reset input fields after loading list
+    }
+
+    function createNewNote() {
+        noteTitleInput.value = '';
+        noteContentTextarea.value = '';
+        currentNoteId = null;
+        deleteNoteBtn.style.display = 'none'; // Hide delete button for new note
+        // Remove active class from all note items
+        document.querySelectorAll('.note-item').forEach(item => item.classList.remove('active'));
+        noteTitleInput.focus();
+    }
+
+    function selectNote(noteId) {
+        const note = currentFile.notes.find(n => n.id === noteId);
+        if (note) {
+            noteTitleInput.value = note.title;
+            noteContentTextarea.value = note.content;
+            currentNoteId = note.id;
+            deleteNoteBtn.style.display = 'inline-block'; // Show delete button
+
+            // Set active class
+            document.querySelectorAll('.note-item').forEach(item => item.classList.remove('active'));
+            const selectedNoteItem = notesListContainer.querySelector(`[data-note-id="${noteId}"]`);
+            if (selectedNoteItem) {
+                selectedNoteItem.classList.add('active');
+            }
+        }
+    }
+
+    function saveNote() {
+        if (!currentFile) {
+            showCustomAlert('Please select a PDF to save notes.');
+            return;
+        }
+
+        const title = noteTitleInput.value.trim();
+        const content = noteContentTextarea.value.trim();
+
+        if (!title && !content) {
+            showCustomAlert('Note cannot be empty. Please add a title or content.');
+            return;
+        }
+
+        if (currentNoteId) {
+            // Update existing note
+            const noteIndex = currentFile.notes.findIndex(n => n.id === currentNoteId);
+            if (noteIndex !== -1) {
+                currentFile.notes[noteIndex].title = title;
+                currentFile.notes[noteIndex].content = content;
+            }
+        } else {
+            // Create new note
+            const newNote = {
+                id: 'note_' + Date.now(),
+                title: title || 'Untitled Note',
+                content: content
+            };
+            currentFile.notes.push(newNote);
+        }
+
+        // Save to localStorage
+        localStorage.setItem('pdfFiles', JSON.stringify(Object.values(storedFiles)));
+        showCustomAlert('Note saved successfully!');
+        loadNotesForFile(); // Refresh the list
+        createNewNote(); // Reset to new note mode
+    }
+
+    function deleteNote(noteIdToDelete, event) {
+        event.stopPropagation(); // Prevent selecting the note when deleting
+        showCustomConfirm('Are you sure you want to delete this note?', () => {
+            if (!currentFile) return;
+
+            currentFile.notes = currentFile.notes.filter(note => note.id !== noteIdToDelete);
+            localStorage.setItem('pdfFiles', JSON.stringify(Object.values(storedFiles)));
+            showCustomAlert('Note deleted.');
+            loadNotesForFile(); // Refresh the list
+
+            if (currentNoteId === noteIdToDelete) {
+                createNewNote(); // Reset if the deleted note was being edited
+            }
+        });
+    }
+
+    // Highlighter Functions
+    function toggleHighlightMode() {
+        if (!currentFile) {
+            showCustomAlert('Please select a PDF to use the highlighter.');
+            return;
+        }
+        isHighlightingMode = !isHighlightingMode;
+        if (isHighlightingMode) {
+            highlighterBtn.classList.add('active');
+            highlightColorPalette.style.display = 'flex';
+            showCustomAlert('Highlighter mode active. Select text and click a color to highlight.');
+        } else {
+            highlighterBtn.classList.remove('active');
+            highlightColorPalette.style.display = 'none';
+            selectedHighlightColor = ''; // Clear selected color
+            // Deselect all color buttons
+            document.querySelectorAll('.highlight-color-button').forEach(btn => btn.classList.remove('selected-color'));
+        }
+    }
+
+    function setHighlightColor(color) {
+        selectedHighlightColor = color;
+        // Update UI to show selected color
+        document.querySelectorAll('.highlight-color-button').forEach(btn => {
+            if (btn.getAttribute('data-color') === color) {
+                btn.classList.add('selected-color');
+            } else {
+                btn.classList.remove('selected-color');
+            }
+        });
+        if (isHighlightingMode) { // If already in highlight mode, apply if text is selected
+            applyHighlight();
+        } else {
+            toggleHighlightMode(); // Turn on highlight mode if not already
+        }
+    }
+
+    function applyHighlight() {
+        if (!isHighlightingMode || !selectedHighlightColor || !currentFile) return;
+
+        const selection = window.getSelection();
+        if (!selection || selection.rangeCount === 0) return;
+
+        const range = selection.getRangeAt(0);
+        const container = htmlRendered;
+
+        // Ensure the selection is within the htmlRendered area
+        if (!container.contains(range.commonAncestorContainer)) {
+            return;
+        }
+
+        // Get plain text offsets within the htmlRendered content
+        const preCaretRange = range.cloneRange();
+        preCaretRange.selectNodeContents(container);
+        preCaretRange.setEnd(range.startContainer, range.startOffset);
+        const startOffset = preCaretRange.toString().length;
+        const endOffset = startOffset + range.toString().length;
+
+        // Create a unique ID for the highlight
+        const highlightId = 'h_' + Date.now();
+
+        // Add new highlight to data
+        currentFile.highlights.push({
+            id: highlightId,
+            start: startOffset,
+            end: endOffset,
+            color: selectedHighlightColor
+        });
+
+        // Sort highlights to prevent issues with overlapping/nested spans
+        // Apply from end to start to avoid changing offsets of un-applied highlights
+        currentFile.highlights.sort((a, b) => a.start - b.start);
+
+        localStorage.setItem('pdfFiles', JSON.stringify(Object.values(storedFiles)));
+        renderHtmlContentWithHighlights(); // Re-render to apply the new highlight
+    }
+
+    // Function to re-render HTML content with all stored highlights
+    function renderHtmlContentWithHighlights() {
+        if (!currentFile) {
+            htmlRendered.innerHTML = '';
+            return;
+        }
+
+        const rawMarkdown = currentFile.userHtmlContent || '';
+        const parsedHtml = marked.parse(rawMarkdown);
+
+        // Create a temporary div to work with the HTML without affecting the live DOM until ready
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = parsedHtml;
+
+        if (currentFile.highlights && currentFile.highlights.length > 0) {
+            // Sort highlights by start position to process them in order
+            const sortedHighlights = [...currentFile.highlights].sort((a, b) => a.start - b.start);
+
+            // This is a simple text node traversal to find offsets and apply spans.
+            // It might not handle complex HTML structures perfectly (e.g., highlights spanning multiple block elements).
+            let currentTextOffset = 0;
+            const nodesToProcess = [tempDiv]; // Start with the root of our temporary HTML
+
+            while (nodesToProcess.length > 0) {
+                const currentNode = nodesToProcess.shift();
+
+                if (currentNode.nodeType === Node.TEXT_NODE) {
+                    const nodeText = currentNode.nodeValue;
+                    const nodeLength = nodeText.length;
+
+                    for (let i = 0; i < sortedHighlights.length; i++) {
+                        const highlight = sortedHighlights[i];
+
+                        // Check if the highlight overlaps with the current text node
+                        const highlightStartsInNode = highlight.start >= currentTextOffset && highlight.start < currentTextOffset + nodeLength;
+                        const highlightEndsInNode = highlight.end > currentTextOffset && highlight.end <= currentTextOffset + nodeLength;
+                        const highlightSpansNode = highlight.start < currentTextOffset && highlight.end > currentTextOffset + nodeLength;
+
+                        if (highlightStartsInNode || highlightEndsInNode || highlightSpansNode) {
+                            // Calculate the part of the highlight that is within this text node
+                            const intersectionStart = Math.max(highlight.start, currentTextOffset);
+                            const intersectionEnd = Math.min(highlight.end, currentTextOffset + nodeLength);
+
+                            if (intersectionStart < intersectionEnd) {
+                                const localStart = intersectionStart - currentTextOffset;
+                                const localEnd = intersectionEnd - currentTextOffset;
+
+                                // Create a Range to select the text within this node
+                                const range = document.createRange();
+                                range.setStart(currentNode, localStart);
+                                range.setEnd(currentNode, localEnd);
+
+                                // Create the highlight span
+                                const span = document.createElement('span');
+                                span.className = `highlight-${highlight.color}`;
+                                span.setAttribute('data-highlight-id', highlight.id); // Store ID for removal
+
+                                try {
+                                    range.surroundContents(span);
+                                    // After surrounding, the current text node might have been split.
+                                    // The walker would need to be re-positioned or re-initialized.
+                                    // For this simple approach, we rely on re-rendering the whole thing.
+                                    // Mark this highlight as "applied" or remove it from the sortedHighlights
+                                    // array to avoid processing it again.
+                                    // For simplicity, we'll just let it re-process, but for performance,
+                                    // removing applied highlights from the sorted list would be better.
+                                } catch (e) {
+                                    console.warn("Could not apply highlight due to complex DOM structure:", e, "Highlight:", highlight);
+                                    // This usually means the highlight spans across different HTML elements,
+                                    // which `range.surroundContents` cannot handle directly.
+                                    // For example, highlighting text that includes a <strong> tag.
+                                }
+                            }
+                        }
+                    }
+                    currentTextOffset += nodeLength; // Advance the overall text offset
+                } else if (currentNode.nodeType === Node.ELEMENT_NODE) {
+                    // If it's an element, add its children to the queue to process their text nodes
+                    nodesToProcess.unshift(...Array.from(currentNode.childNodes)); // Add to front for depth-first
+                }
+            }
+        }
+
+        htmlRendered.innerHTML = tempDiv.innerHTML;
+    }
+
+    // Event listener for clicks on highlighted spans to remove them
+    htmlRendered.addEventListener('click', (event) => {
+        const target = event.target;
+        if (target.tagName === 'SPAN' && target.hasAttribute('data-highlight-id') && isHighlightingMode) {
+            const highlightId = target.getAttribute('data-highlight-id');
+            showCustomConfirm('Remove this highlight?', () => {
+                removeHighlight(highlightId);
+            });
+        }
+    });
+
+    function removeHighlight(highlightId) {
+        if (!currentFile || !currentFile.highlights) return;
+
+        currentFile.highlights = currentFile.highlights.filter(h => h.id !== highlightId);
+        localStorage.setItem('pdfFiles', JSON.stringify(Object.values(storedFiles)));
+        renderHtmlContentWithHighlights(); // Re-render to remove the highlight
+    }
+
+
+    // Initial load of files and potentially select the first one if available
+    if (savedFiles.length > 0) {
+        // Find the button for the first saved file and simulate a click
+        const firstFileButton = fileList.querySelector('.file-button');
+        if (firstFileButton) {
+            // Simulate click to load the file and set up viewers
+            firstFileButton.click();
+        }
+    }
+  </script>
+</body>
+</html>

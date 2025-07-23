@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StudyLabs - AI-Powered Interactive Study Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .document-preview {
+            background: linear-gradient(145deg, #f9fafb, #e5e7eb);
+            border-radius: 1rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+        .chat-bubble {
+            border-radius: 1.5rem;
+            position: relative;
+        }
+        .chat-bubble:after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 20%;
+            width: 0;
+            height: 0;
+            border: 20px solid transparent;
+            border-top-color: #3b82f6;
+            border-bottom: 0;
+            border-left: 0;
+            margin-left: -10px;
+            margin-bottom: -20px;
+        }
+        .floating {
+            animation: floating 3s ease-in-out infinite;
+        }
+        @keyframes floating {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
+            100% { transform: translateY(0px); }
+        }
+    </style>
+</head>
+<body class="font-sans antialiased text-gray-800">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm fixed w-full z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 flex items-center">
+                        <i class="fas fa-brain text-indigo-600 text-2xl mr-2"></i>
+                        <span class="text-xl font-bold text-indigo-600">StudyLabs</span>
+                    </div>
+                </div>
+                <div class="hidden md:ml-6 md:flex md:items-center md:space-x-8">
+                    <a href="#features" class="text-gray-700 hover:text-indigo-600 px-3 py-2 text-sm font-medium">Features</a>
+                    <a href="#how-it-works" class="text-gray-700 hover:text-indigo-600 px-3 py-2 text-sm font-medium">How It Works</a>
+                    <a href="#pricing" class="text-gray-700 hover:text-indigo-600 px-3 py-2 text-sm font-medium">Pricing</a>
+                    <a href="#testimonials" class="text-gray-700 hover:text-indigo-600 px-3 py-2 text-sm font-medium">Testimonials</a>
+                </div>
+                <div class="flex items-center">
+                    <a href="C:\Users\User\OneDrive\Desktop\Class 7 StudyLabs\SignUp.html" class="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700 transition duration-300">Get Started</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="gradient-bg pt-32 pb-20 px-4 sm:px-6 lg:px-8 text-white">
+        <div class="max-w-7xl mx-auto">
+            <div class="md:flex md:items-center md:justify-between">
+                <div class="md:w-1/2 mb-10 md:mb-0">
+                    <h1 class="text-4xl md:text-5xl font-bold leading-tight mb-6">Transform Your Documents Into Interactive Study Experiences</h1>
+                    <p class="text-xl mb-8 text-indigo-100">Upload your PDFs and engage in intelligent conversations with our AI to ask questions, clarify concepts, and test your knowledge with automatically generated quizzes.</p>
+                    <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+                        <a href="C:\Users\User\OneDrive\Desktop\Class 7 StudyLabs\SignUp.html" class="bg-white text-indigo-600 px-6 py-3 rounded-md text-lg font-semibold hover:bg-gray-100 transition duration-300 text-center">Get Started For Free</a>
+                        <a href="#" class="border-2 border-white text-white px-6 py-3 rounded-md text-lg font-semibold hover:bg-white hover:text-indigo-600 transition duration-300 text-center">Watch Demo</a>
+                    </div>
+                </div>
+                <div class="md:w-1/2 relative">
+                    <div class="document-preview p-6 max-w-md mx-auto relative floating">
+                        <div class="flex justify-between items-center mb-4">
+                            <div class="flex space-x-2">
+                                <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                                <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                                <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                            </div>
+                            <span class="text-sm font-medium text-gray-600">Biology_101.pdf</span>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg shadow-sm mb-4">
+                            <p class="text-gray-700 mb-2"><span class="bg-yellow-200 px-1">Mitochondria are the powerhouse of the cell</span>, producing ATP through cellular respiration...</p>
+                            <p class="text-gray-700">The process of photosynthesis converts light energy into chemical energy stored in glucose molecules...</p>
+                        </div>
+                        <div class="chat-bubble bg-blue-500 text-white p-4 mb-4">
+                            <p>Can you explain the difference between cellular respiration and photosynthesis?</p>
+                        </div>
+                        <div class="bg-gray-100 p-4 rounded-lg">
+                            <p class="text-gray-700 italic">Cellular respiration breaks down glucose to produce ATP, while photosynthesis uses light energy to create glucose...</p>
+                        </div>
+                        <div class="absolute -bottom-4 -right-4 bg-indigo-500 text-white px-3 py-1 rounded-full text-xs font-bold">
+                            AI Assistant
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Trusted By Section -->
+    <section class="py-12 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <p class="text-center text-gray-500 mb-8">TRUSTED BY STUDENTS AND EDUCATORS AT</p>
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-8 items-center justify-center">
+                <div class="flex justify-center">
+                    <span class="text-2xl font-bold text-gray-700">Harvard</span>
+                </div>
+                <div class="flex justify-center">
+                    <span class="text-2xl font-bold text-gray-700">Stanford</span>
+                </div>
+                <div class="flex justify-center">
+                    <span class="text-2xl font-bold text-gray-700">MIT</span>
+                </div>
+                <div class="flex justify-center">
+                    <span class="text-2xl font-bold text-gray-700">Oxford</span>
+                </div>
+                <div class="flex justify-center">
+                    <span class="text-2xl font-bold text-gray-700">Coursera</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="py-20 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl font-extrabold text-gray-900 sm:text-4xl">Powerful Features to Supercharge Your Learning</h2>
+                <p class="mt-4 max-w-2xl text-xl text-gray-500 mx-auto">StudyLabs combines advanced AI with intuitive tools to create the ultimate study companion.</p>
+            </div>
+            
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Feature 1 -->
+                <div class="feature-card bg-white p-8 rounded-xl shadow-md transition duration-300">
+                    <div class="w-14 h-14 bg-indigo-100 rounded-full flex items-center justify-center mb-6">
+                        <i class="fas fa-comments text-indigo-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">AI Document Chat</h3>
+                    <p class="text-gray-600">Have natural conversations with your documents. Ask questions, get explanations, and clarify complex topics instantly.</p>
+                </div>
+                
+                <!-- Feature 2 -->
+                <div class="feature-card bg-white p-8 rounded-xl shadow-md transition duration-300">
+                    <div class="w-14 h-14 bg-indigo-100 rounded-full flex items-center justify-center mb-6">
+                        <i class="fas fa-question-circle text-indigo-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">Smart Quiz Generator</h3>
+                    <p class="text-gray-600">Automatically create quizzes in multiple formats (MCQ, fill-in-the-blank) from your document content to test your knowledge.</p>
+                </div>
+                
+                <!-- Feature 3 -->
+                <div class="feature-card bg-white p-8 rounded-xl shadow-md transition duration-300">
+                    <div class="w-14 h-14 bg-indigo-100 rounded-full flex items-center justify-center mb-6">
+                        <i class="fas fa-highlighter text-indigo-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">Multi-Color Highlighting</h3>
+                    <p class="text-gray-600">Mark important passages with different colors for better organization and visual memory cues.</p>
+                </div>
+                
+                <!-- Feature 4 -->
+                <div class="feature-card bg-white p-8 rounded-xl shadow-md transition duration-300">
+                    <div class="w-14 h-14 bg-indigo-100 rounded-full flex items-center justify-center mb-6">
+                        <i class="fas fa-sticky-note text-indigo-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">Integrated Note System</h3>
+                    <p class="text-gray-600">Attach personal notes to specific sections of your documents for comprehensive study materials.</p>
+                </div>
+                
+                <!-- Feature 5 -->
+                <div class="feature-card bg-white p-8 rounded-xl shadow-md transition duration-300">
+                    <div class="w-14 h-14 bg-indigo-100 rounded-full flex items-center justify-center mb-6">
+                        <i class="fas fa-file-alt text-indigo-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">Clean Text View</h3>
+                    <p class="text-gray-600">Convert PDFs to clean, editable text for easier reading and content extraction.</p>
+                </div>
+                
+                <!-- Feature 6 -->
+                <div class="feature-card bg-white p-8 rounded-xl shadow-md transition duration-300">
+                    <div class="w-14 h-14 bg-indigo-100 rounded-full flex items-center justify-center mb-6">
+                        <i class="fas fa-cloud-upload-alt text-indigo-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">Cloud Sync</h3>
+                    <p class="text-gray-600">Access your study materials from any device with automatic cloud synchronization.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section id="how-it-works" class="py-20 bg-gray-50 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl font-extrabold text-gray-900 sm:text-4xl">How StudyLabs Works</h2>
+                <p class="mt-4 max-w-2xl text-xl text-gray-500 mx-auto">Transform your study process in just a few simple steps.</p>
+            </div>
+            
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Step 1 -->
+                <div class="text-center">
+                    <div class="w-20 h-20 bg-indigo-600 rounded-full flex items-center justify-center mx-auto mb-6 text-white text-2xl font-bold">1</div>
+                    <h3 class="text-xl font-bold mb-3">Upload Your Document</h3>
+                    <p class="text-gray-600">Simply drag and drop your PDF or other document formats into StudyLabs.</p>
+                </div>
+                
+                <!-- Step 2 -->
+                <div class="text-center">
+                    <div class="w-20 h-20 bg-indigo-600 rounded-full flex items-center justify-center mx-auto mb-6 text-white text-2xl font-bold">2</div>
+                    <h3 class="text-xl font-bold mb-3">Engage with AI Assistant</h3>
+                    <p class="text-gray-600">Ask questions, request summaries, or clarify concepts with our Gemini-powered AI.</p>
+                </div>
+                
+                <!-- Step 3 -->
+                <div class="text-center">
+                    <div class="w-20 h-20 bg-indigo-600 rounded-full flex items-center justify-center mx-auto mb-6 text-white text-2xl font-bold">3</div>
+                    <h3 class="text-xl font-bold mb-3">Study Smarter</h3>
+                    <p class="text-gray-600">Use highlights, notes, and auto-generated quizzes to master the material efficiently.</p>
+                </div>
+            </div>
+            
+            <div class="mt-16 bg-white rounded-xl shadow-xl overflow-hidden">
+                <div class="md:flex">
+                    <div class="md:w-1/2 p-8 md:p-12">
+                        <h3 class="text-2xl font-bold mb-4">Experience the Future of Studying</h3>
+                        <p class="text-gray-600 mb-6">StudyLabs uses advanced natural language processing to understand your documents at a deep level, allowing for meaningful interactions that enhance comprehension and retention.</p>
+                        <ul class="space-y-3">
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-indigo-600 mt-1 mr-2"></i>
+                                <span>Reduce study time by up to 40%</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-indigo-600 mt-1 mr-2"></i>
+                                <span>Improve test scores with targeted quizzes</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-indigo-600 mt-1 mr-2"></i>
+                                <span>Never struggle with complex concepts again</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="md:w-1/2 bg-gray-100 flex items-center justify-center p-8">
+                        <div class="relative w-full max-w-md">
+                            <div class="bg-white p-6 rounded-lg shadow-md">
+                                <div class="flex items-center mb-4">
+                                    <div class="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center mr-3">
+                                        <i class="fas fa-robot text-indigo-600"></i>
+                                    </div>
+                                    <div>
+                                        <p class="font-medium">StudyLabs AI</p>
+                                        <p class="text-xs text-gray-500">Gemini-powered assistant</p>
+                                    </div>
+                                </div>
+                                <div class="space-y-4">
+                                    <div class="bg-blue-100 p-3 rounded-lg">
+                                        <p>I've analyzed your document on cellular biology. Would you like me to:</p>
+                                        <div class="mt-2 space-y-2">
+                                            <button class="text-left w-full bg-white px-3 py-1 rounded text-sm border border-gray-200 hover:bg-gray-50">Summarize key concepts</button>
+                                            <button class="text-left w-full bg-white px-3 py-1 rounded text-sm border border-gray-200 hover:bg-gray-50">Create a quiz on mitochondria</button>
+                                            <button class="text-left w-full bg-white px-3 py-1 rounded text-sm border border-gray-200 hover:bg-gray-50">Explain photosynthesis in simple terms</button>
+                                        </div>
+                                    </div>
+                                    <div class="bg-gray-100 p-3 rounded-lg">
+                                        <p class="italic">"Explain the Krebs cycle like I'm 10 years old"</p>
+                                    </div>
+                                </div>
+                                <div class="mt-4 flex">
+                                    <input type="text" placeholder="Ask about your document..." class="flex-1 border border-gray-300 rounded-l-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                    <button class="bg-indigo-600 text-white px-4 rounded-r-lg"><i class="fas fa-paper-plane"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section id="pricing" class="py-20 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl font-extrabold text-gray-900 sm:text-4xl">Simple, Transparent Pricing</h2>
+                <p class="mt-4 max-w-2xl text-xl text-gray-500 mx-auto">Choose the plan that fits your study needs.</p>
+            </div>
+            
+            <div class="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+                <!-- Free Plan -->
+                <div class="bg-white rounded-xl shadow-md overflow-hidden border border-gray-200">
+                    <div class="p-8">
+                        <h3 class="text-2xl font-bold mb-2">Free</h3>
+                        <p class="text-gray-600 mb-6">Perfect for trying out StudyLabs</p>
+                        <div class="mb-6">
+                            <span class="text-4xl font-bold">$0</span>
+                            <span class="text-gray-500">/month</span>
+                        </div>
+                        <ul class="space-y-3 mb-8">
+                            <li class="flex items-start">
+                                <i class="fas fa-check text-green-500 mt-1 mr-2"></i>
+                                <span>5 document uploads per month</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check text-green-500 mt-1 mr-2"></i>
+                                <span>Basic AI interactions</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check text-green-500 mt-1 mr-2"></i>
+                                <span>Limited highlighting</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check text-green-500 mt-1 mr-2"></i>
+                                <span>3 quizzes per month</span>
+                            </li>
+                        </ul>
+                        <button class="w-full bg-gray-100 text-gray-800 py-3 rounded-lg font-medium hover:bg-gray-200 transition duration-300">Get Started</button>
+                    </div>
+                </div>
+                
+                <!-- Pro Plan -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden border-2 border-indigo-500 relative">
+                    <div class="absolute top-0 right-0 bg-indigo-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">MOST POPULAR</div>
+                    <div class="p-8">
+                        <h3 class="text-2xl font-bold mb-2">Pro</h3>
+                        <p class="text-gray-600 mb-6">For serious students and educators</p>
+                        <div class="mb-6">
+                            <span class="text-4xl font-bold">$9.99</span>
+                            <span class="text-gray-500">/month</span>
+                        </div>
+                        <ul class="space-y-3 mb-8">
+                            <li class="flex items-start">
+                                <i class="fas fa-check text-green-500 mt-1 mr-2"></i>
+                                <span>Unlimited document uploads</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check text-green-500 mt-1 mr-2"></i>
+                                <span>Advanced AI interactions</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check text-green-500 mt-1 mr-2"></i>
+                                <span>Full highlighting capabilities</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check text-green-500 mt-1 mr-2"></i>
+                                <span>Unlimited quizzes</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check text-green-500 mt-1 mr-2"></i>
+                                <span>Cloud sync across devices</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check text-green-500 mt-1 mr-2"></i>
+                                <span>Priority support</span>
+                            </li>
+                        </ul>
+                        <button class="w-full bg-indigo-600 text-white py-3 rounded-lg font-medium hover:bg-indigo-700 transition duration-300">Get Started</button>
+                    </div>
+                </div>
+                
+                <!-- Team Plan -->
+                <div class="bg-white rounded-xl shadow-md overflow-hidden border border-gray-200">
+                    <div class="p-8">
+                        <h3 class="text-2xl font-bold mb-2">Team</h3>
+                        <p class="text-gray-600 mb-6">For study groups and institutions</p>
+                        <div class="mb-6">
+                            <span class="text-4xl font-bold">$29.99</span>
+                            <span class="text-gray-500">/month</span>
+                        </div>
+                        <ul class="space-y-3 mb-8">
+                            <li class="flex items-start">
+                                <i class="fas fa-check text-green-500 mt-1 mr-2"></i>
+                                <span>Everything in Pro</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check text-green-500 mt-1 mr-2"></i>
+                                <span>Up to 5 team members</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check text-green-500 mt-1 mr-2"></i>
+                                <span>Shared documents and notes</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check text-green-500 mt-1 mr-2"></i>
+                                <span>Collaborative study sessions</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check text-green-500 mt-1 mr-2"></i>
+                                <span>Admin dashboard</span>
+                            </li>
+                        </ul>
+                        <button class="w-full bg-gray-100 text-gray-800 py-3 rounded-lg font-medium hover:bg-gray-200 transition duration-300">Get Started</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section id="testimonials" class="py-20 bg-gray-50 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl font-extrabold text-gray-900 sm:text-4xl">What Our Users Say</h2>
+                <p class="mt-4 max-w-2xl text-xl text-gray-500 mx-auto">Join thousands of students and educators who transformed their learning with StudyLabs.</p>
+            </div>
+            
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Testimonial 1 -->
+                <div class="bg-white p-8 rounded-xl shadow-md">
+                    <div class="flex items-center mb-4">
+                        <div class="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center mr-4">
+                            <i class="fas fa-user-graduate text-indigo-600"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold">Sarah Johnson</h4>
+                            <p class="text-sm text-gray-500">Medical Student</p>
+                        </div>
+                    </div>
+                    <p class="text-gray-600 italic">"StudyLabs cut my study time in half while improving my test scores. The AI explanations of complex medical concepts are incredibly accurate and easy to understand."</p>
+                    <div class="mt-4 flex text-yellow-400">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                    </div>
+                </div>
+                
+                <!-- Testimonial 2 -->
+                <div class="bg-white p-8 rounded-xl shadow-md">
+                    <div class="flex items-center mb-4">
+                        <div class="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center mr-4">
+                            <i class="fas fa-chalkboard-teacher text-indigo-600"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold">Prof. David Chen</h4>
+                            <p class="text-sm text-gray-500">Computer Science Professor</p>
+                        </div>
+                    </div>
+                    <p class="text-gray-600 italic">"I use StudyLabs to create interactive materials for my students. The quiz generator saves me hours each week, and my students love chatting with the documents."</p>
+                    <div class="mt-4 flex text-yellow-400">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                    </div>
+                </div>
+                
+                <!-- Testimonial 3 -->
+                <div class="bg-white p-8 rounded-xl shadow-md">
+                    <div class="flex items-center mb-4">
+                        <div class="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center mr-4">
+                            <i class="fas fa-user-tie text-indigo-600"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold">Michael Rodriguez</h4>
+                            <p class="text-sm text-gray-500">Law Student</p>
+                        </div>
+                    </div>
+                    <p class="text-gray-600 italic">"The highlighting and note-taking features combined with AI explanations make studying case law so much more efficient. I wish I had this in my first year!"</p>
+                    <div class="mt-4 flex text-yellow-400">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star-half-alt"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="py-20 gradient-bg text-white px-4 sm:px-6 lg:px-8">
+        <div class="max-w-4xl mx-auto text-center">
+            <h2 class="text-3xl md:text-4xl font-bold mb-6">Ready to Transform Your Study Process?</h2>
+            <p class="text-xl mb-8 text-indigo-100">Join thousands of students and educators who are already studying smarter with StudyLabs.</p>
+            <div class="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
+                <a href="C:\Users\User\OneDrive\Desktop\Class 7 StudyLabs\SignUp.html" class="bg-white text-indigo-600 px-8 py-4 rounded-lg text-lg font-bold hover:bg-gray-100 transition duration-300">Get Started For Free</a>
+                <a href="#" class="border-2 border-white text-white px-8 py-4 rounded-lg text-lg font-bold hover:bg-white hover:text-indigo-600 transition duration-300">Schedule a Demo</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-12 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-7xl mx-auto">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">StudyLabs</h3>
+                    <p class="text-gray-400">AI-powered interactive study platform that transforms your documents into dynamic learning experiences.</p>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Product</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-400 hover:text-white">Features</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">Pricing</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">API</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">Integrations</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Resources</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-400 hover:text-white">Documentation</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">Guides</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">Blog</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">Support</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Company</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-400 hover:text-white">About</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">Careers</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">Privacy</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">Terms</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-gray-800 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
+                <p class="text-gray-400 mb-4 md:mb-0">© 2023 StudyLabs. All rights reserved.</p>
+                <div class="flex space-x-6">
+                    <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-twitter"></i></a>
+                    <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-facebook"></i></a>
+                    <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-linkedin"></i></a>
+                    <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-instagram"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+
+    </script>
+</body>
+</html>

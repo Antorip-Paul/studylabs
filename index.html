@@ -555,6 +555,11 @@
             });
         });
 
+        setTimeout(() => {
+          console.log("Welcome Back!");
+        }, 500);
+
+
         if (localStorage.getItem('signupPageVisited')) {
                 alert('Welcome back! You can continue to the dashboard.');
                 window.location.replace('Dashboard.html');
